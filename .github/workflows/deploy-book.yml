@@ -27,12 +27,10 @@ jobs:
       - uses: leanprover/lean-action@v1
         with:
           auto-config: false
-          build: false
+          build: true
+          build-args: generate-book
           test: false
           lint: false
-
-      - name: Get Mathlib cache
-        run: lake exe cache get
 
       - name: Build book
         run: scripts/build-book.sh
