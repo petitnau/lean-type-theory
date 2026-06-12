@@ -52,6 +52,7 @@ jobs:
           ssh-keyscan -H -p "$DEPLOY_PORT" "$DEPLOY_HOST" >> ~/.ssh/known_hosts
           ssh -i ~/.ssh/deploy_key \
             -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
             -o StrictHostKeyChecking=yes \
             -p "$DEPLOY_PORT" \
             "$DEPLOY_USER@$DEPLOY_HOST" \
@@ -64,6 +65,6 @@ jobs:
           test -n "$DEPLOY_PORT"
           test -n "$DEPLOY_PATH"
           rsync -az --delete \
-            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -p $DEPLOY_PORT" \
+            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -p $DEPLOY_PORT" \
             _out/book/html-multi/ \
             "$DEPLOY_USER@$DEPLOY_HOST:${DEPLOY_PATH%/}/"
