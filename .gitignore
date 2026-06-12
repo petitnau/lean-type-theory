@@ -1,0 +1,13 @@
+.DS_Store
+.lake/
+build/
+*.olean
+*.ilean
+*.c
+*.o
+
+book.pdf
+_slides/
+_out/
+
+AGENTS.md
