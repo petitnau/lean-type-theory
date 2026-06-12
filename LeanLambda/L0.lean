@@ -179,13 +179,11 @@ inductive BetaStep : L0 -> L0 -> Prop where
       BetaStep body body' ->
       BetaStep (.lam body) (.lam body')
 infix:50 " →β₀ " => BetaStep
-local infix:50 " →β " => BetaStep
 
 abbrev BetaStar : L0 -> L0 -> Prop := Relation.ReflTransGen BetaStep
 infix:50 " →β₀* " => BetaStar
-local infix:50 " →β* " => BetaStar
 
-def NormalForm (t : L0) : Prop := ∀u, ¬(t →β u)
+def NormalForm (t : L0) : Prop := ∀u, ¬(t →β₀ u)
 
 syntax "beta_step" : tactic
 macro_rules | `(tactic| beta_step) =>  `(tactic| repeat' constructor)
@@ -218,38 +216,38 @@ example : NormalForm N' := by normal
 example : NormalForm A := by normal
 example : NormalForm M := by normal
 
-example : L0[{I} 3] →β L0[3] := by beta_step
-example : L0[{I} 3] →β* L0[3] := by rt_step { beta_step }
-example : L0[{T} 3 4] →β* L0[3] := by beta_steps
-example : L0[{F} 3 4] →β* L0[4] := by beta_steps
+example : L0[{I} 3] →β₀ L0[3] := by beta_step
+example : L0[{I} 3] →β₀* L0[3] := by rt_step { beta_step }
+example : L0[{T} 3 4] →β₀* L0[3] := by beta_steps
+example : L0[{F} 3 4] →β₀* L0[4] := by beta_steps
 
-example : L0[{N} {T}] →β* L0[{F}] := by calc
+example : L0[{N} {T}] →β₀* L0[{F}] := by calc
     _   = L0[{N} {T}] := by rfl
     _   = L0[(λ 0 {F} {T}) {T}] := by rfl
-    _  →β L0[{T} {F} {T}] := by beta_step
+    _  →β₀ L0[{T} {F} {T}] := by beta_step
     _   = L0[(λ λ 1) {F} {T}] := by rfl
-    _  →β L0[(λ {F}) {T}] := by beta_step
-    _  →β L0[{F}] := by beta_step
+    _  →β₀ L0[(λ {F}) {T}] := by beta_step
+    _  →β₀ L0[{F}] := by beta_step
 
-example : L0[{N} {F}] →β* L0[{T}] := by calc
+example : L0[{N} {F}] →β₀* L0[{T}] := by calc
     _   = L0[{N} {F}] := by rfl
     _   = L0[(λ 0 {F} {T}) {F}] := by rfl
-    _  →β L0[{F} {F} {T}] := by beta_step
+    _  →β₀ L0[{F} {F} {T}] := by beta_step
     _   = L0[(λ λ 0) {F} {T}] := by rfl
-    _  →β L0[(λ 0) {T}] := by beta_step
-    _  →β L0[{T}] := by beta_step
+    _  →β₀ L0[(λ 0) {T}] := by beta_step
+    _  →β₀ L0[{T}] := by beta_step
 
-example : L0[{N'} {T}] →β* L0[{F}] := by beta_steps
-example : L0[{N'} {F}] →β* L0[{T}] := by beta_steps
+example : L0[{N'} {T}] →β₀* L0[{F}] := by beta_steps
+example : L0[{N'} {F}] →β₀* L0[{T}] := by beta_steps
 
-example : L0[{N} {T}] →β* L0[{F}] := by beta_steps
-example : L0[{N} {F}] →β* L0[{T}] := by beta_steps
-example : L0[{N'} {T}] →β* L0[{F}] := by beta_steps
-example : L0[{N'} {F}] →β* L0[{T}] := by beta_steps
-example : L0[{A} {T} {T}] →β* L0[{T}] := by beta_steps
-example : L0[{A} {T} {F}] →β* L0[{F}] := by beta_steps
-example : L0[{A} {F} {T}] →β* L0[{F}] := by beta_steps
-example : L0[{A} {F} {F}] →β* L0[{F}] := by beta_steps
+example : L0[{N} {T}] →β₀* L0[{F}] := by beta_steps
+example : L0[{N} {F}] →β₀* L0[{T}] := by beta_steps
+example : L0[{N'} {T}] →β₀* L0[{F}] := by beta_steps
+example : L0[{N'} {F}] →β₀* L0[{T}] := by beta_steps
+example : L0[{A} {T} {T}] →β₀* L0[{T}] := by beta_steps
+example : L0[{A} {T} {F}] →β₀* L0[{F}] := by beta_steps
+example : L0[{A} {F} {T}] →β₀* L0[{F}] := by beta_steps
+example : L0[{A} {F} {F}] →β₀* L0[{F}] := by beta_steps
 
 def Z : L0 := L0[λ λ 0]
 def S : L0 := L0[λ λ λ 1 (2 1 0)]
