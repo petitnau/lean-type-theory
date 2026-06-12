@@ -100,44 +100,6 @@ def FV : L1 -> Set String
 def Closed (t : L1) : Prop :=
   ∀ x, x ∉ FV t
 
-private theorem fv_var_toL0With
-  : z ∈ L0.FV (toL0With ρ (var y)) ↔ z = y ∧ z ∉ ρ := by
-  rw [toL0With]
-  by_cases hmem : y ∈ ρ
-  · cases hidx : ρ.idxOf? y with
-    | none =>
-        simp_all [List.idxOf?_eq_none_iff]
-    | some n =>
-        change False ↔ z = y ∧ z ∉ ρ
-        aesop
-  · have hidx : ρ.idxOf? y = none := by
-      simpa [List.idxOf?_eq_none_iff] using hmem
-    rw [hidx]
-    change z = y ↔ z = y ∧ z ∉ ρ
-    aesop
-
-theorem fv_toL0With
-  : z ∈ L0.FV (toL0With ρ e) ↔ z ∈ FV e ∧ z ∉ ρ := by
-  induction e generalizing ρ with
-  | var y =>
-      exact fv_var_toL0With
-  | lam x body ih =>
-      simpa [toL0With, L0.FV, FV, List.mem_cons, and_assoc] using
-        (ih (ρ := x :: ρ))
-  | app fn arg ihfn iharg =>
-      simp [toL0With, L0.FV, FV, ihfn (ρ := ρ), iharg (ρ := ρ),
-        or_and_right]
-
-theorem fv_toL0
-  : z ∈ L0.FV e.toL0 ↔ z ∈ FV e := by
-  simpa [toL0] using (fv_toL0With (ρ := []) (e := e) (z := z))
-
-theorem fv_lam_of_ne
-  (hneq : z ≠ x)
-  (hfree : z ∈ FV body)
-  : z ∈ FV (lam x body) := by
-  exact ⟨hfree, hneq⟩
-
 /-!
 Two named terms are alpha-equivalent when they translate to the same de Bruijn
 term.  The versions with environments are useful when the comparison happens
