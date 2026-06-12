@@ -233,6 +233,7 @@ def bookConfig : RenderConfig where
   emitHtmlMulti := .immediately
   destination := "_out/book"
   htmlDepth := 2
+  sourceLink := some "https://github.com/petitnau/lean-type-theory"
   extraCss := {courseCss}
 
 def main := manualMain (%doc LeanLambdaBook.Book) (config := bookConfig)
