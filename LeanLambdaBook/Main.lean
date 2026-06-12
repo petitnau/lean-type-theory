@@ -225,7 +225,26 @@ main .section-toc li {
   text-decoration: none;
   font-weight: 700;
 }
+
 "#
+
+def pageSourceJs : JS := r##"
+document.addEventListener("DOMContentLoaded", () => {
+  const repo = "https://github.com/petitnau/lean-type-theory/blob/master/";
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  const chapter = parts[0];
+
+  let source = "LeanLambdaBook/Book.lean";
+  const match = chapter && chapter.match(/^(L[0-9]+)___-/);
+  if (match) source = `LeanLambda/${match[1]}.lean`;
+
+  const link = document.querySelector("#meta-links a");
+  if (!link) return;
+  link.href = repo + source;
+  link.textContent = "Source";
+  link.title = source;
+});
+"##
 
 def bookConfig : RenderConfig where
   emitTeX := false
@@ -235,5 +254,6 @@ def bookConfig : RenderConfig where
   htmlDepth := 2
   sourceLink := some "https://github.com/petitnau/lean-type-theory"
   extraCss := {courseCss}
+  extraJs := {pageSourceJs}
 
 def main := manualMain (%doc LeanLambdaBook.Book) (config := bookConfig)
