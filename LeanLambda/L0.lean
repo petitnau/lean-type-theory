@@ -29,28 +29,17 @@ inductive L0 where
   | app (fn arg : L0)
 deriving DecidableEq, Repr, Lean.ToExpr
 
-declare_syntax_cat l0Term
-syntax    "L0[" l0Term "]" : term
-syntax    "{" term "}" : l0Term
-syntax    "(" l0Term ")" : l0Term
-syntax    "λ" l0Term : l0Term
-syntax    num : l0Term
-syntax    ident : l0Term
-syntax:70 l0Term:70 l0Term:71 : l0Term
+syntax_rules l0Term quoted_by "L0[" l0Term "]" where
+  | "{" t:term "}"          => t
+  | "(" t:l0Term ")"        => parse t
+  | n:num                   => L0.var n
+  | x:ident                 => L0.free x
+  | "λ" body:l0Term         => L0.lam (parse body)
+  | f:l0Term:70 a:l0Term:71 => L0.app (parse f) (parse a)
 
-macro_rules
-  | `(L0[ $n:num ]) => `(L0.var $n)
-  | `(L0[ $x:ident ]) => do
-      let x' : Lean.TSyntax `term := ⟨Lean.Syntax.mkStrLit x.getId.toString⟩
-      `(L0.free $x')
-  | `(L0[ { $t:term } ]) => `($t)
-  | `(L0[ ( $t:l0Term ) ]) => `(L0[ $t ])
-  | `(L0[ λ $body:l0Term ]) => `(L0.lam L0[ $body ])
-  | `(L0[ $f:l0Term $a:l0Term ]) => `(L0.app L0[ $f ] L0[ $a ])
-
-example : L0[λ λ 1] = L0.lam (L0.lam (L0.var 1)) := by rfl
-example : L0[x]     = L0.free "x" := by rfl
-example : L0[0 1 2] = L0.app (L0.app (L0.var 0) (L0.var 1)) (L0.var 2) := by rfl
+example : L0[x]     = .free "x" := by rfl
+example : L0[λ λ 1] = .lam (.lam (.var 1)) := by rfl
+example : L0[0 1 2] = .app (.app (.var 0) (.var 1)) (.var 2) := by rfl
 
 namespace L0
 

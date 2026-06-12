@@ -28,28 +28,13 @@ inductive L1 where
   | app (fn arg : L1)
 deriving DecidableEq, Repr, Lean.ToExpr
 
-declare_syntax_cat l1Term
-syntax    "L1[" l1Term "]" : term
-syntax    "{" term "}" : l1Term
-syntax    "(" l1Term ")" : l1Term
-syntax    "λ" "{" term "}" "." l1Term : l1Term
-syntax    "λ" ident "." l1Term : l1Term
-syntax    ident : l1Term
-syntax:70 l1Term:70 l1Term:71 : l1Term
-
-macro_rules
-  | `(L1[ { $t:term } ]) => `($t)
-  | `(L1[ ( $t:l1Term ) ]) => `(L1[ $t ])
-  | `(L1[ λ { $x:term } . $body:l1Term ]) =>
-      `(L1.lam $x L1[ $body ])
-  | `(L1[ λ $x:ident . $body:l1Term ]) => do
-      let x' : Lean.TSyntax `term := ⟨Lean.Syntax.mkStrLit x.getId.toString⟩
-      `(L1.lam $x' L1[ $body ])
-  | `(L1[ $x:ident ]) => do
-      let x' : Lean.TSyntax `term := ⟨Lean.Syntax.mkStrLit x.getId.toString⟩
-      `(L1.var $x')
-  | `(L1[ $f:l1Term $a:l1Term ]) =>
-      `(L1.app L1[ $f ] L1[ $a ])
+syntax_rules l1Term quoted_by "L1[" l1Term "]" where
+  | "{" t:term "}"                      => t
+  | "(" t:l1Term ")"                    => parse t
+  | x:ident                             => L1.var x
+  | "λ" x:ident "." body:l1Term         => L1.lam x (parse body)
+  | "λ" "{" x:term "}" "." body:l1Term  => L1.lam x (parse body)
+  | f:l1Term:70 a:l1Term:71             => L1.app (parse f) (parse a)
 
 example : L1[λx. x] = L1.lam "x" (L1.var "x") := by rfl
 example : L1[x y z] = L1[(x y) z] := by rfl
