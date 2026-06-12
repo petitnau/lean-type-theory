@@ -93,7 +93,6 @@ inductive HasType : Context -> L1 -> Ty -> Prop where
       HasType Γ arg A ->
       HasType Γ (.app fn arg) B
 
-notation:50 Γ " ⊢ " t " ∶ " A => HasType Γ t A
 notation:50 Γ " ⊢ " t " : " A => HasType Γ t A
 
 /-!
@@ -101,27 +100,27 @@ The first examples are derivations of simple typing judgments.  They are small
 enough that the proof scripts follow the inference rules directly.
 -/
 
-example : [("x", #A)] ⊢ L1[x] ∶ #A := by
+example : [("x", #A)] ⊢ L1[x] : #A := by
   apply HasType.var (by simp [lookup])
 
-example : [] ⊢ L1.I ∶ #A ⇒ #A := by
+example : [] ⊢ L1.I : #A ⇒ #A := by
   unfold L1.I
   apply HasType.lam
   apply HasType.var (by simp [lookup])
 
-example : [] ⊢ L1.T ∶ #A ⇒ #B ⇒ #A := by
+example : [] ⊢ L1.T : #A ⇒ #B ⇒ #A := by
   unfold L1.T
   apply HasType.lam
   apply HasType.lam
   apply HasType.var (by simp [lookup])
 
-example : [] ⊢ L1.F ∶ #A ⇒ #B ⇒ #B := by
+example : [] ⊢ L1.F : #A ⇒ #B ⇒ #B := by
   unfold L1.F
   apply HasType.lam
   apply HasType.lam
   apply HasType.var (by simp [lookup])
 
-example : [("y", #A)] ⊢ L1[(λx. x) y] ∶ #A := by
+example : [("y", #A)] ⊢ L1[(λx. x) y] : #A := by
   apply HasType.app (A := #A) (B := #A)
   . apply HasType.lam
     apply HasType.var (by simp [lookup])
