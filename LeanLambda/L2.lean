@@ -16,6 +16,9 @@ named {lit}`A`, and {lit}`A ⇒ B` is the function type.
 $$`
 A ::= \alpha \mid A \to A
 `
+
+The Lean type below mirrors this grammar.  Function arrows associate to the
+right, so {lit}`#A ⇒ #B ⇒ #C` means {lit}`#A ⇒ (#B ⇒ #C)`.
 -/
 
 inductive Ty where
@@ -44,6 +47,9 @@ to the first matching variable name.
 $$`
 \Gamma ::= \cdot \mid \Gamma, x : A
 `
+
+Contexts are lists, so the most recent declaration is checked first.  This
+matches the usual convention that an inner binder shadows an outer one.
 -/
 
 abbrev Context := List (String × Ty)
@@ -69,6 +75,10 @@ $$`
 \frac{\Gamma \vdash e_1 : A \to B \qquad \Gamma \vdash e_2 : A}
      {\Gamma \vdash e_1\ e_2 : B}
 `
+
+The inductive judgment below is exactly these three rules.  Proofs of typing
+judgments are therefore derivation trees built from {lit}`var`, {lit}`lam`, and
+{lit}`app`.
 -/
 
 inductive HasType : Context -> L1 -> Ty -> Prop where

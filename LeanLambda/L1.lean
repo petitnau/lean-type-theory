@@ -17,6 +17,9 @@ datatype.
 $$`
 e ::= x \mid \lambda x.\ e \mid e\ e
 `
+
+This is the syntax students usually write on paper.  The constructors keep the
+names explicitly, before any quotienting by alpha-equivalence.
 -/
 
 inductive L1 where
@@ -71,6 +74,9 @@ $$`
   &=& \llbracket e_1 \rrbracket_\rho\ \llbracket e_2 \rrbracket_\rho
 \end{array}
 `
+
+The translation resolves a bound variable by its position in the context.  Free
+variables are left as names, so open terms can still be represented.
 -/
 
 namespace L1
@@ -96,6 +102,10 @@ FV(\lambda x.\ e) &=& FV(e) \setminus \{x\}\\
 FV(e_1\ e_2) &=& FV(e_1) \cup FV(e_2)
 \end{array}
 `
+
+Unlike {lit}`L0`, a lambda removes its bound name from the free-variable set.
+The theorem following the definition says that this agrees with the translation
+to {lit}`L0`.
 -/
 
 def FV : L1 -> Set String
@@ -152,6 +162,9 @@ $$`
 e =_\alpha e' \quad\text{iff}\quad
 \llbracket e \rrbracket_\cdot = \llbracket e' \rrbracket_\cdot
 `
+
+In this development, alpha-equivalence is not another recursive relation on
+names.  It means that the two terms have the same de Bruijn meaning.
 -/
 
 def AlphaEqWith (ρ ρ' : List String) (s t : L1) : Prop :=
@@ -204,6 +217,10 @@ $$`
 \qquad
 \frac{e_2 \longrightarrow e_2'}{e_1\ e_2 \longrightarrow e_1\ e_2'}
 `
+
+These rules are the named presentation of reduction.  The beta rule delegates
+the substitution check to {lit}`L0`, and the soundness theorem below connects
+the named relation back to beta reduction on meanings.
 -/
 
 def SubstIn (ρ : List String) (x : String) (arg body out : L1) : Prop :=
@@ -276,6 +293,10 @@ $$`
 \frac{e_1\ \mathsf{neutral} \qquad e_2\ \mathsf{normal}}
      {e_1\ e_2\ \mathsf{neutral}}
 `
+
+This mutual definition separates introduction forms from stuck computations:
+lambdas are normal directly, while neutral terms are variables applied to normal
+arguments.
 -/
 
 mutual

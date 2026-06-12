@@ -18,6 +18,8 @@ applications.
 $$`
 e ::= n \mid x \mid \lambda.\ e \mid e\ e
 `
+
+The Lean datatype below has one constructor for each form in this grammar.
 -/
 
 inductive L0 where
@@ -70,6 +72,10 @@ $$`
 \uparrow_c(e_1\ e_2) &=& \uparrow_c(e_1)\ \uparrow_c(e_2)
 \end{array}
 `
+
+The cutoff tells the shift operation which indices are protected by binders we
+have already crossed.  The recursive definition below follows the displayed
+equations directly.
 -/
 
 def shiftAbove (cutoff : Nat) : L0 -> L0
@@ -99,6 +105,9 @@ $$`
 [s/j]x &=& x
 \end{array}
 `
+
+General substitution is defined above, but these three equations are the cases
+that show up most often when contracting a redex at the outermost binder.
 -/
 
 theorem subst_var_zero : subst 0 s (.var 0) = s := by rfl
@@ -122,6 +131,9 @@ FV(\lambda.\ e) &=& FV(e)\\
 FV(e_1\ e_2) &=& FV(e_1) \cup FV(e_2)
 \end{array}
 `
+
+This definition tracks only named free variables.  Bound de Bruijn indices are
+not names, so they cannot contribute to this set.
 -/
 
 def FV : L0 -> Set String
@@ -153,11 +165,16 @@ $$`
 \frac{e \to_\beta e'}{\lambda.\ e \to_\beta \lambda.\ e'}
 `
 
+The first rule is the actual contraction rule.  The other three rules say that
+one contraction may happen in any immediate subterm.
+
 $$`
 \frac{}{e \to_\beta^* e}
 \qquad
 \frac{e \to_\beta e' \qquad e' \to_\beta^* e''}{e \to_\beta^* e''}
 `
+
+The many-step relation is Lean's reflexive-transitive closure of one beta step.
 -/
 
 inductive BetaStep : L0 -> L0 -> Prop where
