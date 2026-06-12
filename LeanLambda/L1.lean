@@ -121,15 +121,12 @@ def AlphaEqIn (ρ : List String) (s t : L1) : Prop :=
 def AlphaEq (s t : L1) : Prop :=
   AlphaEqIn [] s t
 infix:50 " =α₁ " => L1.AlphaEq
-local infix:50 " =α " => L1.AlphaEq
 
 abbrev BetaStep (s t : L1) : Prop := (toL0 s) →β₀ (toL0 t)
 infix:50 " →β₁ " => BetaStep
-local infix:50 " →β " => BetaStep
 
 abbrev BetaStar (s t : L1) : Prop := (toL0 s) →β₀* (toL0 t)
 infix:50 " →β₁* " => BetaStar
-local infix:50 " →β* " => BetaStar
 
 def NormalForm (t : L1) : Prop := L0.NormalForm (toL0 t)
 
@@ -293,9 +290,9 @@ example : L1.toL0 L1[λx. λx. x] = L0[λ λ 0] := by rfl
 
 example : L1.toL0 L1[x] = L0[x] := by rfl
 
-example : L1[λx. x] =α L1[λy. y] := by alpha_eq
-example : L1[(λx. x) (λy. y)] →β L1[λz. z] := by beta_step
-example : L1[(λx. x) (λy. y)] →β* L1[λz. z] := by beta_steps
+example : L1[λx. x] =α₁ L1[λy. y] := by alpha_eq
+example : L1[(λx. x) (λy. y)] →β₁ L1[λz. z] := by beta_step
+example : L1[(λx. x) (λy. y)] →β₁* L1[λz. z] := by beta_steps
 
 example : L1.NormalForm I := by normal
 example : L1.NormalForm T := by normal
@@ -305,46 +302,46 @@ example : L1.NormalForm N' := by normal
 example : L1.NormalForm A := by normal
 example : L1.NormalForm M := by normal
 
-example : L1[{I} x] →β L1[x] := by beta_step
-example : L1[{I} x] →β* L1[x] := by rt_step { beta_step }
-example : L1[{T} x y] →β* L1[x] := by beta_steps
-example : L1[{F} x y] →β* L1[y] := by beta_steps
+example : L1[{I} x] →β₁ L1[x] := by beta_step
+example : L1[{I} x] →β₁* L1[x] := by rt_step { beta_step }
+example : L1[{T} x y] →β₁* L1[x] := by beta_steps
+example : L1[{F} x y] →β₁* L1[y] := by beta_steps
 
-example : L1[{N} {F}] →β* L1[{T}] := by calc
+example : L1[{N} {F}] →β₁* L1[{T}] := by calc
     _   = L1[{N} {F}] := by rfl
     _   = L1[(λb. b {F} {T}) {F}] := by rfl
-    _  →β L1[{F} {F} {T}] := by beta_step
+    _ →β₁ L1[{F} {F} {T}] := by beta_step
     _   = L1[(λx. λy. y) {F} {T}] := by rfl
-    _  →β L1[(λy. y) {T}] := by beta_step
-    _  →β L1[{T}] := by beta_step
+    _ →β₁ L1[(λy. y) {T}] := by beta_step
+    _ →β₁ L1[{T}] := by beta_step
 
-example : L1[{N} {T}] →β* L1[{F}] := by calc
+example : L1[{N} {T}] →β₁* L1[{F}] := by calc
     _   = L1[{N} {T}] := by rfl
     _   = L1[(λb. b {F} {T}) {T}] := by rfl
-    _  →β L1[{T} {F} {T}] := by beta_step
+    _ →β₁ L1[{T} {F} {T}] := by beta_step
     _   = L1[(λx. λy. x) {F} {T}] := by rfl
-    _  →β L1[(λy. {F}) {T}] := by beta_step
-    _  →β L1[{F}] := by beta_step
+    _ →β₁ L1[(λy. {F}) {T}] := by beta_step
+    _ →β₁ L1[{F}] := by beta_step
 
-example : L1[{N} {F}] →β* L1[{T}] := by calc
+example : L1[{N} {F}] →β₁* L1[{T}] := by calc
     _   = L1[{N} {F}] := by rfl
     _   = L1[(λb. b {F} {T}) {F}] := by rfl
-    _  →β L1[{F} {F} {T}] := by beta_step
+    _ →β₁ L1[{F} {F} {T}] := by beta_step
     _   = L1[(λx. λy. y) {F} {T}] := by rfl
-    _  →β L1[(λy. y) {T}] := by beta_step
-    _  →β L1[{T}] := by beta_step
+    _ →β₁ L1[(λy. y) {T}] := by beta_step
+    _ →β₁ L1[{T}] := by beta_step
 
-example : L1[{N'} {T}] →β* L1[{F}] := by beta_steps
-example : L1[{N'} {F}] →β* L1[{T}] := by beta_steps
+example : L1[{N'} {T}] →β₁* L1[{F}] := by beta_steps
+example : L1[{N'} {F}] →β₁* L1[{T}] := by beta_steps
 
-example : L1[{N} {T}] →β* L1[{F}] := by beta_steps
-example : L1[{N} {F}] →β* L1[{T}] := by beta_steps
-example : L1[{N'} {T}] →β* L1[{F}] := by beta_steps
-example : L1[{N'} {F}] →β* L1[{T}] := by beta_steps
-example : L1[{A} {T} {T}] →β* L1[{T}] := by beta_steps
-example : L1[{A} {T} {F}] →β* L1[{F}] := by beta_steps
-example : L1[{A} {F} {T}] →β* L1[{F}] := by beta_steps
-example : L1[{A} {F} {F}] →β* L1[{F}] := by beta_steps
+example : L1[{N} {T}] →β₁* L1[{F}] := by beta_steps
+example : L1[{N} {F}] →β₁* L1[{T}] := by beta_steps
+example : L1[{N'} {T}] →β₁* L1[{F}] := by beta_steps
+example : L1[{N'} {F}] →β₁* L1[{T}] := by beta_steps
+example : L1[{A} {T} {T}] →β₁* L1[{T}] := by beta_steps
+example : L1[{A} {T} {F}] →β₁* L1[{F}] := by beta_steps
+example : L1[{A} {F} {T}] →β₁* L1[{F}] := by beta_steps
+example : L1[{A} {F} {F}] →β₁* L1[{F}] := by beta_steps
 
 example : L1[(λx. x) y] ⟶₁ L1[y] := by
   apply L1.ReduceIn.beta
