@@ -13,6 +13,10 @@ state alpha equivalence and beta reduction.
 The datatype {lit}`L1` is the named abstract syntax tree.  The notation {lit}`L1[...]`
 lets examples use lambda-calculus syntax while still elaborating to this
 datatype.
+
+$$`
+e ::= x \mid \lambda x.\ e \mid e\ e
+`
 -/
 
 inductive L1 where
@@ -53,6 +57,20 @@ example : L1[x y z] = L1[(x y) z] := by rfl
 The context {lit}`ctx` records the binders currently in scope.  A variable whose
 name appears in the context becomes a de Bruijn index; otherwise it remains a
 named free variable.
+
+$$`
+\begin{array}{rcl}
+\llbracket x \rrbracket_\rho
+  &=& \begin{cases}
+      n & \rho(n) = x\\
+      x & x \notin \rho
+      \end{cases}\\
+\llbracket \lambda x.\ e \rrbracket_\rho
+  &=& \lambda.\ \llbracket e \rrbracket_{x,\rho}\\
+\llbracket e_1\ e_2 \rrbracket_\rho
+  &=& \llbracket e_1 \rrbracket_\rho\ \llbracket e_2 \rrbracket_\rho
+\end{array}
+`
 -/
 
 namespace L1
@@ -70,6 +88,14 @@ def toL0 (t : L1) : L0 := toL0With [] t
 Free variables are defined structurally on named terms.  The theorem
 {lit}`fv_toL0With` connects this visible definition to the free variables of the
 translated {lit}`L0` term.
+
+$$`
+\begin{array}{rcl}
+FV(x) &=& \{x\}\\
+FV(\lambda x.\ e) &=& FV(e) \setminus \{x\}\\
+FV(e_1\ e_2) &=& FV(e_1) \cup FV(e_2)
+\end{array}
+`
 -/
 
 def FV : L1 -> Set String
@@ -121,6 +147,11 @@ theorem fv_lam_of_ne
 Two named terms are alpha-equivalent when they translate to the same de Bruijn
 term.  The versions with environments are useful when the comparison happens
 under binders.
+
+$$`
+e =_\alpha e' \quad\text{iff}\quad
+\llbracket e \rrbracket_\cdot = \llbracket e' \rrbracket_\cdot
+`
 -/
 
 def AlphaEqWith (ρ ρ' : List String) (s t : L1) : Prop :=
@@ -161,10 +192,22 @@ macro_rules
 The relation {lit}`ReduceIn` presents beta reduction directly over named syntax.
 Its substitution premise is still checked by translating the redex to {lit}`L0`,
 which avoids implementing a separate fresh-name algorithm here.
+
+$$`
+\frac{[e_2/x]e_1 = e'}{(\lambda x.\ e_1)\ e_2 \longrightarrow e'}
+\qquad
+\frac{e \longrightarrow e'}{\lambda x.\ e \longrightarrow \lambda x.\ e'}
+`
+
+$$`
+\frac{e_1 \longrightarrow e_1'}{e_1\ e_2 \longrightarrow e_1'\ e_2}
+\qquad
+\frac{e_2 \longrightarrow e_2'}{e_1\ e_2 \longrightarrow e_1\ e_2'}
+`
 -/
 
 def SubstIn (ρ : List String) (x : String) (arg body out : L1) : Prop :=
-  L0.SubstTop (toL0With ρ arg) (toL0With (x :: ρ) body) = toL0With ρ out
+  L0.subst 0 (toL0With ρ arg) (toL0With (x :: ρ) body) = toL0With ρ out
 
 def Subst (x : String) (arg body out : L1) : Prop :=
   SubstIn [] x arg body out
@@ -220,6 +263,19 @@ def Reducible (e : L1) : Prop :=
 The inductive predicates {lit}`Normal` and {lit}`Neutral` describe the normal forms of
 the named language.  A lambda is normal when its body is normal; a neutral term
 is a variable applied to normal arguments.
+
+$$`
+\frac{e\ \mathsf{normal}}{\lambda x.\ e\ \mathsf{normal}}
+\qquad
+\frac{e\ \mathsf{neutral}}{e\ \mathsf{normal}}
+`
+
+$$`
+\frac{}{x\ \mathsf{neutral}}
+\qquad
+\frac{e_1\ \mathsf{neutral} \qquad e_2\ \mathsf{normal}}
+     {e_1\ e_2\ \mathsf{neutral}}
+`
 -/
 
 mutual

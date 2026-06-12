@@ -14,6 +14,10 @@ recursive definitions without having to choose fresh names.
 
 The terms of {lit}`L0` are variables, free variables, lambda abstractions, and
 applications.
+
+$$`
+e ::= n \mid x \mid \lambda.\ e \mid e\ e
+`
 -/
 
 inductive L0 where
@@ -51,58 +55,57 @@ namespace L0
 /-!
 # Substitution
 
-Substitution has to pass under binders.  The auxiliary function {lit}`mapVars`
-records how many binders we have crossed with the {lit}`cutoff` argument.  Shifting
-then changes only the variables at or above that cutoff.
+Substitution has to pass under binders.  When we cross a binder, the term being
+substituted must be shifted so that its free de Bruijn indices still refer to
+the same binders.
+
+$$`
+\begin{array}{rcl}
+\uparrow_c(n) &=& \begin{cases}
+  n & n < c\\
+  n+1 & n \ge c
+\end{cases}\\
+\uparrow_c(x) &=& x\\
+\uparrow_c(\lambda.\ e) &=& \lambda.\ \uparrow_{c+1}(e)\\
+\uparrow_c(e_1\ e_2) &=& \uparrow_c(e_1)\ \uparrow_c(e_2)
+\end{array}
+`
 -/
 
-def mapVars (cutoff: Nat) (onVar : Nat -> Nat -> L0): L0 -> L0
-  | .var k => onVar cutoff k
+def shiftAbove (cutoff : Nat) : L0 -> L0
+  | .var k => .var (if k < cutoff then k else k + 1)
   | .free x => .free x
-  | .lam body => .lam (mapVars (cutoff + 1) onVar body)
-  | .app f a => .app (mapVars cutoff onVar f) (mapVars cutoff onVar a)
+  | .lam body => .lam (shiftAbove (cutoff + 1) body)
+  | .app f a => .app (shiftAbove cutoff f) (shiftAbove cutoff a)
 
-def ShiftAbove (d cutoff : Nat) : L0 -> L0 :=
-  mapVars cutoff (λc k => .var (if k < c then k else (k + d)))
-
-def ShiftDownAbove (cutoff : Nat) : L0 -> L0 :=
-  mapVars cutoff (λc k => .var (if k < c then k else (k - 1)))
-
-def Shift (d : Nat) : L0 -> L0 := ShiftAbove d 0
-
-def ShiftDown : L0 -> L0 := ShiftDownAbove 0
-
-def Subst (j : Nat) (s : L0) : L0 -> L0 :=
-  mapVars 0 (λc k => if k = j + c then Shift c s else .var k)
-
-def SubstTop (s body : L0) : L0 :=
-  ShiftDown (Subst 0 (Shift 1 s) body)
+def subst (j : Nat) (s : L0) : L0 -> L0
+  | .var k =>
+      if k = j then s
+      else if j < k then .var (k - 1)
+      else .var k
+  | .free x => .free x
+  | .lam body => .lam (subst (j + 1) (shiftAbove 0 s) body)
+  | .app f a => .app (subst j s f) (subst j s a)
 
 /-!
-The basic substitution facts below say what top-level substitution does to
-variables.  They are the calculation rules used by beta reduction examples.
+The basic substitution facts below say what substitution for the outermost
+variable does to variables.  They are the calculation rules used by beta
+reduction examples.
+
+$$`
+\begin{array}{rcl}
+[s/0]0 &=& s\\
+[s/0](n+1) &=& n\\
+[s/j]x &=& x
+\end{array}
+`
 -/
 
-theorem shiftAbove_zero : ShiftAbove 0 cutoff t = t := by
-  induction t generalizing cutoff <;> simp_all [ShiftAbove, mapVars]
+theorem subst_var_zero : subst 0 s (.var 0) = s := by rfl
 
-theorem shiftDown_shiftAbove
-  : ShiftDownAbove cutoff (ShiftAbove 1 cutoff t) = t := by
-  induction t generalizing cutoff with
-  | var k =>
-      simp [ShiftDownAbove, ShiftAbove, mapVars]
-      by_cases h : k < cutoff <;> simp [h]
-      omega
-  | _ => simp_all [ShiftDownAbove, ShiftAbove, mapVars]
+theorem subst_var_succ : subst 0 s (.var (n + 1)) = .var n := by rfl
 
-theorem substTop_var_zero : SubstTop s (.var 0) = s := by
-  simp [SubstTop, Subst, mapVars, Shift, shiftAbove_zero, ShiftDown, shiftDown_shiftAbove]
-
-theorem substTop_var_succ : SubstTop s (.var (n + 1)) = .var n := by
-  simp [SubstTop, Subst, ShiftDown, ShiftDownAbove, mapVars]
-
-theorem substTop_free : SubstTop s (.free x) = .free x := by
-  rfl
+theorem subst_free : subst j s (.free x) = .free x := by rfl
 
 /-!
 # Free Variables
@@ -110,6 +113,15 @@ theorem substTop_free : SubstTop s (.free x) = .free x := by
 The set given by {lit}`FV` contains exactly the named variables that occur free in a term.
 De Bruijn variables are bound-variable references, so they contribute no free
 names.
+
+$$`
+\begin{array}{rcl}
+FV(n) &=& \varnothing\\
+FV(x) &=& \{x\}\\
+FV(\lambda.\ e) &=& FV(e)\\
+FV(e_1\ e_2) &=& FV(e_1) \cup FV(e_2)
+\end{array}
+`
 -/
 
 def FV : L0 -> Set String
@@ -130,11 +142,27 @@ example : Closed L0[λ 0] := by intro _ h; exact h
 A beta step contracts one redex or performs one such contraction inside an
 application or a lambda.  The reflexive-transitive closure {lit}`BetaStar` is the
 many-step reduction relation.
+
+$$`
+\frac{}{(\lambda.\ e)\ e' \to_\beta [e'/0]e}
+\qquad
+\frac{e_1 \to_\beta e_1'}{e_1\ e_2 \to_\beta e_1'\ e_2}
+\qquad
+\frac{e_2 \to_\beta e_2'}{e_1\ e_2 \to_\beta e_1\ e_2'}
+\qquad
+\frac{e \to_\beta e'}{\lambda.\ e \to_\beta \lambda.\ e'}
+`
+
+$$`
+\frac{}{e \to_\beta^* e}
+\qquad
+\frac{e \to_\beta e' \qquad e' \to_\beta^* e''}{e \to_\beta^* e''}
+`
 -/
 
 inductive BetaStep : L0 -> L0 -> Prop where
   | beta :
-      BetaStep (.app (.lam body) arg) (SubstTop arg body)
+      BetaStep (.app (.lam body) arg) (subst 0 arg body)
   | app_left :
       BetaStep f f' ->
       BetaStep (.app f a) (.app f' a)

@@ -12,6 +12,10 @@ become typed.
 
 Types are base types and function types.  The notation {lit}`#A` creates a base type
 named {lit}`A`, and {lit}`A ⇒ B` is the function type.
+
+$$`
+A ::= \alpha \mid A \to A
+`
 -/
 
 inductive Ty where
@@ -36,6 +40,10 @@ namespace L2
 
 A context is a list of variable declarations.  Lookup returns the type assigned
 to the first matching variable name.
+
+$$`
+\Gamma ::= \cdot \mid \Gamma, x : A
+`
 -/
 
 abbrev Context := List (String × Ty)
@@ -50,6 +58,17 @@ def lookup (x : String) : Context -> Option Ty
 The judgment {lit}`Γ ⊢ e : A` is defined by the three usual rules: variables are
 typed by lookup, lambdas introduce function types, and applications eliminate
 function types.
+
+$$`
+\frac{x : A \in \Gamma}{\Gamma \vdash x : A}
+\qquad
+\frac{\Gamma, x : A \vdash e : B}{\Gamma \vdash \lambda x.\ e : A \to B}
+`
+
+$$`
+\frac{\Gamma \vdash e_1 : A \to B \qquad \Gamma \vdash e_2 : A}
+     {\Gamma \vdash e_1\ e_2 : B}
+`
 -/
 
 inductive HasType : Context -> L1 -> Ty -> Prop where
